@@ -13,6 +13,18 @@ use Illuminate\Http\Request;
 |
 */
 
-Route::middleware('auth:api')->get('/user', function (Request $request) {
-    return $request->user();
+// Route::middleware('auth:api')->get('/user', function (Request $request) {
+//     return $request->user();
+// });
+
+
+Route::group(['middleware' => 'cors'],function(){
+
+    Route::prefix('admin')->group(function () {
+        Route::resources([
+            'user' => 'UserController',
+            'post' => 'PostController',
+            'tag' => 'TagController',
+        ]);
+    });
 });
