@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Http\Requests;
+use App\Models\Post;
+use App\Models\Taggable;
 
 class PostController extends Controller
 {
@@ -13,7 +16,8 @@ class PostController extends Controller
      */
     public function index()
     {
-        //
+        $post = Post::all();
+        return response ($post,200);
     }
 
     /**
@@ -24,7 +28,42 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = \Validator::make($request->all(), [
+            'title' => 'required',
+            //'user_id'=> 'required|exists:users,id',
+            'taggables' => 'nullable',
+            'taggables.*.tag_id'=> 'required|exists:tags,id',
+            'taggables.*.taggable_type'=> 'required|max:191'
+        ],[
+            'title.required' => 'The title field is required',
+            // 'user_id.required' => 'The user is required',
+            // 'user_id.exists' => 'The user no exists in the system',
+            'taggables.*.tag_id.required' => 'select a tag please',
+            'taggables.*.tag_id.exists' => 'This a tag no exists in the system',
+            'taggables.*.taggable_type.required' => 'Taggable type is required',
+            'taggables.*.taggable_type.max' => 'he maximum size must be 191 characters in taggable type field',
+        ]);
+
+        if($validator->fails()){
+    		return response(["errors"=>$validator->errors(), 'msg'=>'unprocessed request'], 422);
+        }
+
+        $post = new Post();
+        $post->user_id = $request->user_id;
+        $post->title = $request->title;
+        $post->save();
+
+        if(isset($request->taggables) && !empty($request->taggables)){
+            $taggables = $request->taggables;
+            for($i=0; $i<count($taggables); $i++){
+                $taggable = new Taggable();
+
+                $taggable->post_id = $post->id;
+                $taggable->tag_id = $taggables[$i]['tag_id'];
+                $taggable->save();
+            }
+        }
+        return response(['msg'=>'Created Correctly'], 201);
     }
 
     /**
@@ -35,7 +74,13 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        //
+        $post = Post::find($id);
+
+        if(empty($post)){
+            return response(['msg'=>'Resource not found'], 404);
+        }
+
+        return response($post, 200);
     }
 
     /**
@@ -47,7 +92,29 @@ class PostController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $post = Post::find($id);
+
+        if(empty($post)){
+            return response(['msg'=>'Resource not found'], 404);
+        }
+
+        $validator = \Validator::make($request->all(), [
+            'title' => 'required',
+            'user_id'=> 'required|exists:users,id',
+        ],[
+            'title.required' => 'The title field is required',
+            'user_id.required' => 'The user is required',
+            'user_id.exists' => 'The user no exists in the system',
+        ]);
+
+        if($validator->fails()){
+    		return response(["errors"=>$validator->errors(), 'msg'=>'unprocessed request'], 422);
+        }
+
+        $post->user_id = $request->user_id;
+        $post->title = $request->title;
+        $post->save();
+        return response(['msg'=>'Updated Correctly'], 201);
     }
 
     /**
@@ -58,6 +125,13 @@ class PostController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $post = Post::find($id);
+
+        if(empty($post)){
+            return response(['msg'=>'Resource not found'], 404);
+        }
+
+        $post->delete();
+        return response(['mensaje'=>'Deleted Correctly'], 202);
     }
 }

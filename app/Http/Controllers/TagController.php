@@ -17,7 +17,7 @@ class TagController extends Controller
     public function index()
     {
         $tag = Tag::all();
-        return response ($tag);
+        return response ($tag, 200);
     }
 
     /**
@@ -28,7 +28,23 @@ class TagController extends Controller
      */
     public function store(Request $request)
     {
-        //
+
+        $validator = \Validator::make($request->all(), [
+            'name' => 'required|max:191',
+        ],[
+            'name.required' => 'The name field is required',
+            'name.max' => 'The maximum size must be 191 characters',            
+        ]);
+
+        if($validator->fails()){
+    		return response(["errors"=>$validator->errors(), 'msg'=>'unprocessed request'], 422);
+        }
+
+        $tag = new Tag();
+        $tag->name = $request->name;
+        $tag->save();
+        return response(['msg'=>'Created Correctly'], 201);
+
     }
 
     /**
@@ -39,7 +55,13 @@ class TagController extends Controller
      */
     public function show($id)
     {
-        //
+        $tag = Tag::find($id);
+
+        if(empty($tag)){
+            return response(['msg'=>'Resource not found'], 404);
+        }
+
+        return response($tag, 200);
     }
 
     /**
@@ -51,7 +73,27 @@ class TagController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $tag = Tag::find($id);
+
+        if(empty($tag)){
+            return response(['msg'=>'Resource not found'], 404);
+        }
+
+        $validator = \Validator::make($request->all(), [
+            'name' => 'required|max:191',
+        ],[
+            'name.required' => 'The name field is required',
+            'name.max' => 'The maximum size must be 191 characters',            
+        ]);
+        
+        if($validator->fails()){
+    		return response(["errors"=>$validator->errors(), 'msg'=>'unprocessed request'], 422);
+        }
+
+        $tag->name = $request->name;
+        $tag->save();
+        return response(['msg'=>'Updated Correctly'], 201);      
+
     }
 
     /**
@@ -62,6 +104,14 @@ class TagController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $tag = Tag::find($id);
+
+        if(empty($tag)){
+            return response(['msg'=>'Resource not found'], 404);
+        }
+
+        $tag->delete();
+        return response(['mensaje'=>'Deleted Correctly'], 202);
+
     }
 }
