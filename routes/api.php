@@ -19,12 +19,16 @@ use Illuminate\Http\Request;
 
 
 Route::group(['middleware' => 'cors'],function(){
-
-    Route::prefix('admin')->group(function () {
-        Route::resources([
-            'user' => 'UserController',
-            'post' => 'PostController',
-            'tag' => 'TagController',
-        ]);
+    Route::post('login','Auth@Auth');
+    Route::get('post', 'PostController@index');
+    Route::get('post/{id}', 'PostController@show');
+    Route::group(['middleware'=> 'jwt.auth'], function () {
+        Route::prefix('admin')->group(function () {
+            Route::resources([
+                'user' => 'UserController',
+                'post' => 'PostController',
+                'tag' => 'TagController',
+            ]);
+        });
     });
 });

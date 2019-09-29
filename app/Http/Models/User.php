@@ -24,4 +24,10 @@ class User extends Model
     {
         return $this->hasMany('App\Models\Taggable');
     }
+
+    public static function resolveId()
+    {   
+        $user = JWTAuth::parseToken()->authenticate();
+        return $user->id;
+    }
 }

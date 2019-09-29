@@ -30,14 +30,11 @@ class PostController extends Controller
     {
         $validator = \Validator::make($request->all(), [
             'title' => 'required',
-            //'user_id'=> 'required|exists:users,id',
             'taggables' => 'nullable',
             'taggables.*.tag_id'=> 'required|exists:tags,id',
             'taggables.*.taggable_type'=> 'required|max:191'
         ],[
             'title.required' => 'The title field is required',
-            // 'user_id.required' => 'The user is required',
-            // 'user_id.exists' => 'The user no exists in the system',
             'taggables.*.tag_id.required' => 'select a tag please',
             'taggables.*.tag_id.exists' => 'This a tag no exists in the system',
             'taggables.*.taggable_type.required' => 'Taggable type is required',
@@ -47,9 +44,9 @@ class PostController extends Controller
         if($validator->fails()){
     		return response(["errors"=>$validator->errors(), 'msg'=>'unprocessed request'], 422);
         }
-
+        $user_id = User::resolveId();
         $post = new Post();
-        $post->user_id = $request->user_id;
+        $post->user_id = $user_id;
         $post->title = $request->title;
         $post->save();
 
