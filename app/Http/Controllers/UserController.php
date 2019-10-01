@@ -32,7 +32,7 @@ class UserController extends Controller
     {
         $validator = \Validator::make($request->all(), [
             'name' => 'required|max:191',
-            'email' => 'required|unique|max:191',
+            'email' => 'required|unique:users|max:191',
             'password'=> 'required|min:5|max:20',
             'taggables' => 'nullable',
             'taggables.*.tag_id'=> 'required|exists:tags,id',
@@ -83,7 +83,7 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        $user = User::find($id);
+        $user = User::with('taggables')->find($id);
 
         if(empty($user)){
             return response(['msg'=>'Resource not found'], 404);
@@ -110,15 +110,17 @@ class UserController extends Controller
 
         $validator = \Validator::make($request->all(), [
             'name' => 'required|max:191',
-            'email' => 'required|unique|max:191',
+            'email' => 'required|max:191',
+            'password'=> 'nullable|min:5|max:20',
             
         ],[
             'name.required' => 'The name field is required',
             'name.max' => 'The maximum size must be 191 characters in name field',
             'email.required' => 'The email field is required',
-            'email.unique' => 'This email already registered',
             'email.max' => 'The maximum size must be 191 characters in email field',
             'email.min' => 'The minimum size must be 5 characters in email field',
+            'password.min' => 'The minimum size must be 5 characters in password field',
+            'password.max' => 'The maximum size must be 20 characters in password field',
         ]);
 
         if($validator->fails()){

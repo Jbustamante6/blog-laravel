@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use App\Http\Requests;
 use App\Models\Post;
 use App\Models\Taggable;
+use App\Models\User;
+
 
 class PostController extends Controller
 {
@@ -57,6 +59,7 @@ class PostController extends Controller
 
                 $taggable->post_id = $post->id;
                 $taggable->tag_id = $taggables[$i]['tag_id'];
+                $taggable->taggable_type = $taggables[$i]['taggable_type'];
                 $taggable->save();
             }
         }
@@ -71,7 +74,7 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        $post = Post::find($id);
+        $post = Post::with('taggables')->find($id);
 
         if(empty($post)){
             return response(['msg'=>'Resource not found'], 404);
@@ -97,18 +100,15 @@ class PostController extends Controller
 
         $validator = \Validator::make($request->all(), [
             'title' => 'required',
-            'user_id'=> 'required|exists:users,id',
         ],[
             'title.required' => 'The title field is required',
-            'user_id.required' => 'The user is required',
-            'user_id.exists' => 'The user no exists in the system',
         ]);
 
         if($validator->fails()){
     		return response(["errors"=>$validator->errors(), 'msg'=>'unprocessed request'], 422);
         }
-
-        $post->user_id = $request->user_id;
+        $user_id = User::resolveId();
+        $post->user_id = $user_id;
         $post->title = $request->title;
         $post->save();
         return response(['msg'=>'Updated Correctly'], 201);
